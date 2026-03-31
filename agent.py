@@ -39,7 +39,7 @@ def run_agent(job_url: str, resume_path: str, candidate_name: str) -> None:
         with console.status("[bold blue]Thinking...[/bold blue]"):
             response = client.messages.create(
                 model="claude-sonnet-4-6",
-                max_tokens=8192,
+                max_tokens=16000,
                 system=MAIN_SYSTEM_PROMPT,
                 tools=TOOL_DEFINITIONS,
                 messages=messages,

@@ -8,8 +8,8 @@ import markdownify
 import pdfplumber
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
-from duckduckgo_search.exceptions import DuckDuckGoSearchException
+from ddgs import DDGS
+from ddgs.exceptions import DDGSException
 
 HEADERS = {
     "User-Agent": (
@@ -114,7 +114,7 @@ def web_search(query: str) -> str:
             for r in results:
                 lines.append(f"**{r['title']}**\n{r['href']}\n{r['body']}")
             return "\n\n---\n\n".join(lines)
-        except DuckDuckGoSearchException as e:
+        except DDGSException as e:
             if attempt < 2:
                 time.sleep(2**attempt)
                 continue
