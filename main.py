@@ -18,15 +18,15 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  python main.py --job-url "https://jobs.acme.com/engineer-123" --resume resume.pdf
   python main.py --job-url "https://jobs.acme.com/engineer-123" --resume resume.pdf --name "Jane Smith"
-  python main.py --job-url "https://greenhouse.io/acme/jobs/456" --resume /path/to/resume.txt --name "John Doe"
         """,
     )
     parser.add_argument("--job-url", required=True, help="URL of the job posting")
     parser.add_argument(
         "--resume", required=True, help="Path to your resume file (.pdf or .txt)"
     )
-    parser.add_argument("--name", required=True, help="Your full name")
+    parser.add_argument("--name", default=None, help="Your full name (optional, used in the report header)")
 
     args = parser.parse_args()
 

@@ -89,13 +89,14 @@ Rules:
 """
 
 
-def build_user_prompt(job_url: str, resume_path: str, candidate_name: str) -> str:
+def build_user_prompt(job_url: str, resume_path: str, candidate_name: str | None) -> str:
     today = date.today().isoformat()
+    name_line = f"Candidate name: {candidate_name}\n" if candidate_name else ""
     return (
         f"Please research this job opportunity and create a complete application package.\n\n"
         f"Job URL: {job_url}\n"
         f"Resume file: {resume_path}\n"
-        f"Candidate name: {candidate_name}\n"
+        f"{name_line}"
         f"Today's date: {today}\n\n"
         f"Follow your workflow: fetch the job posting, extract structured details, "
         f"research the company thoroughly, read the resume, analyze gaps, "
