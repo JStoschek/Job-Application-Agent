@@ -3,4 +3,5 @@ output/
 __pycache__/
 *.pyc
 *.pyo
+*.pdf
 .DS_Store
