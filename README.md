@@ -39,6 +39,10 @@ Get a key at [console.anthropic.com](https://console.anthropic.com).
 ## Usage
 
 ```bash
+# Without name
+python main.py --job-url "https://jobs.example.com/some-role" --resume resume.pdf
+
+# With name (included in the report header)
 python main.py --job-url "https://jobs.example.com/some-role" --resume resume.pdf --name "Your Name"
 ```
 
@@ -48,7 +52,7 @@ python main.py --job-url "https://jobs.example.com/some-role" --resume resume.pd
 |------|----------|-------------|
 | `--job-url` | Yes | URL of the job posting |
 | `--resume` | Yes | Path to your resume (`.pdf` or `.txt`) |
-| `--name` | Yes | Your full name (used in the report) |
+| `--name` | No | Your full name (optional, used in the report header) |
 
 ## Output
 
