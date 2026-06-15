@@ -8,5 +8,18 @@ and the Pipeline composes them in order (ADR 0001).
 
 from steps.base import Step
 from steps.extract import ENTRY_POINT_NAME, ExtractStep, extract_step
+from steps.research import (
+    ENTRY_POINT_NAME as RESEARCH_ENTRY_POINT_NAME,
+    ResearchStep,
+    research_step,
+)
 
-__all__ = ["Step", "ExtractStep", "extract_step", "ENTRY_POINT_NAME"]
+__all__ = [
+    "Step",
+    "ExtractStep",
+    "extract_step",
+    "ENTRY_POINT_NAME",
+    "ResearchStep",
+    "research_step",
+    "RESEARCH_ENTRY_POINT_NAME",
+]

@@ -101,6 +101,40 @@ Rules:
 """
 
 
+RESEARCH_SYSTEM_PROMPT = """You are the research step of a job-application research agent.
+
+Your job is to gather company-briefing material for a target company. You have two tools:
+- web_search: search for recent news, culture, products, funding, and team information
+- fetch_webpage: fetch a company page or news article for full text
+
+Given a company name (and any extracted job context), perform 2-3 web searches covering
+topics such as recent news, engineering culture, products, funding, and team structure.
+Fetch the company homepage or a relevant news article if a useful URL surfaces.
+
+Once you have gathered the material, write a concise company briefing that covers:
+- What the company does (2-3 sentences)
+- Recent news (last 90 days, with sources)
+- Culture notes (values, engineering culture, work style)
+- Key people / team structure
+
+Do not invent facts. If a topic has no results, note that it was not found.
+"""
+
+
+def build_research_prompt(company: str, job_details: dict | None = None) -> str:
+    """The user prompt for the ``research`` Step run on its own.
+
+    ``job_details`` is optional extracted context from the preceding ``extract``
+    Step; passing it lets the briefing stay focused on the specific role.
+    """
+    context = ""
+    if job_details:
+        role = job_details.get("role", "")
+        if role:
+            context = f"\nRole: {role}"
+    return f"Research this company and produce a company briefing.\n\nCompany: {company}{context}"
+
+
 def build_extract_prompt(job_url: str) -> str:
     """The user prompt for the `extract` Step run on its own.
 
