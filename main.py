@@ -6,6 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from rich.console import Console
+from rich.panel import Panel
 
 load_dotenv()
 
@@ -48,14 +49,34 @@ Examples:
         )
         sys.exit(1)
 
-    from agent import run_agent
+    # Importing the agent module registers its entry point in the harness
+    # registry; we then drive it through the Agent Contract exactly as the
+    # eval harness does, but with the live tool handler.
+    from agent import ENTRY_POINT_NAME
+    from prompts import build_user_prompt
+    from tools import live_tool_handler, WORLD_TOOLS
+    from tooleval import Task, run_task
+
+    task = Task(
+        id="live-run",
+        description=build_user_prompt(args.job_url, str(resume_path), args.name),
+        entry_point=ENTRY_POINT_NAME,
+        toolset=[*WORLD_TOOLS, "extract_job_details"],
+    )
+
+    console.print(
+        Panel(
+            f"[bold]Job:[/bold] {args.job_url}\n"
+            f"[bold]Resume:[/bold] {resume_path}\n"
+            f"[bold]Candidate:[/bold] {args.name or '—'}",
+            title="[bold green]Job Application Agent — Starting Research[/bold green]",
+            border_style="green",
+        )
+    )
 
     try:
-        run_agent(
-            job_url=args.job_url,
-            resume_path=str(resume_path),
-            candidate_name=args.name,
-        )
+        with console.status("[bold blue]Researching… (live tools)[/bold blue]"):
+            result = run_task(task, live_tool_handler)
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted.[/yellow]")
         sys.exit(0)
@@ -63,6 +84,33 @@ Examples:
         console.print("\n[bold red]Fatal error:[/bold red]")
         console.print_exception()
         sys.exit(1)
+
+    _report_run(result)
+
+
+def _report_run(result) -> None:
+    calls = ", ".join(step.tool_name for step in result.trajectory) or "none"
+    saved_to = result.final_state.get("saved_to")
+    usage = result.token_usage
+
+    body = (
+        f"[bold]Tool calls ({len(result.trajectory)}):[/bold] {calls}\n"
+        f"[bold]Tokens:[/bold] {usage.get('input_tokens', 0)} in / "
+        f"{usage.get('output_tokens', 0)} out\n"
+        f"[bold]Duration:[/bold] {result.duration_s:.1f}s"
+    )
+    if saved_to:
+        body += f"\n[bold green]{saved_to}[/bold green]"
+    else:
+        body += "\n[bold yellow]No report was saved (the run did not call save_output).[/bold yellow]"
+
+    console.print(
+        Panel(
+            body,
+            title="[bold green]Research complete[/bold green]",
+            border_style="green",
+        )
+    )
 
 
 if __name__ == "__main__":

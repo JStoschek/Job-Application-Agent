@@ -195,19 +195,34 @@ def extract_job_details(text: str) -> dict:
     return json.loads(raw)
 
 
-def execute_tool(tool_name: str, tool_input: dict) -> str:
+# The world-boundary tools — the only ones a tool handler ever services. The
+# agent's own cognition (extract_job_details) is deliberately absent: it always
+# runs live and is never mocked (ADR 0002).
+WORLD_TOOLS = ("web_search", "fetch_webpage", "read_resume", "save_output")
+
+
+def live_tool_handler(tool_name: str, args: dict) -> str:
+    """An Agent Contract tool handler backed by the real network and disk.
+
+    This is the live handler the harness injects under ``--live`` and the one
+    ``main.py`` uses for an ordinary run. It services only the four
+    world-boundary tools; ``extract_job_details`` is cognition and must never be
+    routed here.
+    """
     dispatch = {
-        "web_search": lambda i: web_search(i["query"]),
-        "fetch_webpage": lambda i: fetch_webpage(i["url"]),
-        "read_resume": lambda i: read_resume(i["filepath"]),
-        "save_output": lambda i: save_output(i["filename"], i["content"]),
-        "extract_job_details": lambda i: json.dumps(
-            extract_job_details(i["text"]), indent=2
-        ),
+        "web_search": lambda a: web_search(a["query"]),
+        "fetch_webpage": lambda a: fetch_webpage(a["url"]),
+        "read_resume": lambda a: read_resume(a["filepath"]),
+        "save_output": lambda a: save_output(a["filename"], a["content"]),
     }
+    if tool_name == "extract_job_details":
+        raise ValueError(
+            "extract_job_details is agent cognition, not a world-boundary tool; "
+            "it must run live in the agent, never through a tool handler."
+        )
     if tool_name not in dispatch:
         return f"Unknown tool: {tool_name}"
     try:
-        return dispatch[tool_name](tool_input)
+        return dispatch[tool_name](args)
     except Exception as e:
         return f"Tool execution error in {tool_name}: {type(e).__name__}: {e}"
