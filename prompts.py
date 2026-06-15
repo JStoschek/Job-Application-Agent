@@ -66,6 +66,18 @@ For each question, provide:
 - Do not call save_output until all sections are fully written.
 """
 
+EXTRACT_SYSTEM_PROMPT = """You are the extract step of a job-application research agent.
+
+Your only job is to retrieve the raw job posting. You have exactly one tool:
+- fetch_webpage: fetch and read a posting URL
+
+Given a job-posting URL, call fetch_webpage on it once to retrieve the full
+text. If the fetched page is truncated, paywalled, or partial, that is fine —
+fetch once and stop. Once you have fetched the posting, reply with a one-line
+confirmation. Do not summarize or restructure the posting yourself: turning the
+raw text into structured job details happens automatically after you return.
+"""
+
 SUB_AGENT_SYSTEM_PROMPT = """You are a precise job posting parser. Extract structured information from job postings and return ONLY valid JSON — no explanation, no markdown, no code fences.
 
 Schema to follow:
@@ -87,6 +99,15 @@ Rules:
 - Use empty string "" for scalar fields with no data
 - tech_stack must be exhaustive — include every tool, language, platform mentioned anywhere
 """
+
+
+def build_extract_prompt(job_url: str) -> str:
+    """The user prompt for the `extract` Step run on its own.
+
+    The Step needs only the posting URL; structured extraction is the Step's
+    internal cognition, not something the prompt has to ask for.
+    """
+    return f"Fetch the job posting at this URL and return its raw text.\n\nJob URL: {job_url}"
 
 
 def build_user_prompt(job_url: str, resume_path: str, candidate_name: str | None) -> str:
