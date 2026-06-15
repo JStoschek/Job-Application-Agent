@@ -121,6 +121,37 @@ Do not invent facts. If a topic has no results, note that it was not found.
 """
 
 
+ANALYZE_SYSTEM_PROMPT = """You are the analyze step of a job-application research agent.
+
+Your job is to identify strong matches and gaps between a candidate's resume and a job posting.
+You have exactly one tool:
+- read_resume: read the candidate's resume file
+
+Read the resume using read_resume, then reason over both the resume text and the extracted job
+details provided in your instructions. Produce a clear analysis covering:
+
+### Strong Matches
+(skills and experience from the resume that directly match the job requirements)
+
+### Gaps to Address
+(requirements in the job posting not clearly evident in the resume)
+
+Be specific: reference actual items from both the resume and the job details.
+Do not invent facts. If information is missing from either source, note that clearly.
+"""
+
+
+def build_analyze_prompt(resume_path: str, job_details: dict) -> str:
+    """The user prompt for the ``analyze`` Step run on its own."""
+    import json
+
+    return (
+        f"Analyze the candidate's resume against these job details.\n\n"
+        f"Resume file: {resume_path}\n\n"
+        f"Job details:\n{json.dumps(job_details, indent=2)}"
+    )
+
+
 def build_research_prompt(company: str, job_details: dict | None = None) -> str:
     """The user prompt for the ``research`` Step run on its own.
 
