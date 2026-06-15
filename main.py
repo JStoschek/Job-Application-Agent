@@ -57,11 +57,14 @@ Examples:
     from tools import live_tool_handler, WORLD_TOOLS
     from tooleval import Task, run_task
 
+    # The Pipeline composes focused Steps; extract_job_details is now the
+    # extract Step's internal cognition, not a world-boundary tool (ADR 0002),
+    # so the Pipeline's toolset is exactly the four world tools.
     task = Task(
         id="live-run",
         description=build_user_prompt(args.job_url, str(resume_path), args.name),
         entry_point=ENTRY_POINT_NAME,
-        toolset=[*WORLD_TOOLS, "extract_job_details"],
+        toolset=[*WORLD_TOOLS],
     )
 
     console.print(

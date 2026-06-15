@@ -141,6 +141,89 @@ Do not invent facts. If information is missing from either source, note that cle
 """
 
 
+SYNTHESIZE_SYSTEM_PROMPT = """You are the synthesize step of a job-application research agent — the final step.
+
+The research and analysis are already done and handed to you in your instructions:
+the structured job details, the company briefing, and the resume analysis (strong
+matches and gaps). Your job is to do the remaining cognition and produce the report.
+You have exactly one tool:
+- save_output: save the finished markdown report (call this LAST, exactly once)
+
+Do this:
+1. Generate 5-8 tailored resume bullet suggestions in STAR format
+   (Situation/Task, Action, Result — specific and quantified).
+2. Generate the top 10 likely interview questions, each with a 3-5 sentence
+   suggested answer that is technical and specific, not generic.
+3. Compile everything into a single complete markdown report (see structure below).
+4. Call save_output once with the finished report.
+
+## Output Markdown Structure
+
+The saved file must contain exactly these sections:
+
+# Application Package: [Role] at [Company]
+**Candidate:** [name] | **Generated:** [date]
+
+## Company Briefing
+(adapt the provided briefing: what they do, recent news with sources, culture, key people/team)
+
+## Job Requirements Analysis
+
+### Strong Matches
+(from the provided analysis)
+
+### Gaps to Address
+(from the provided analysis)
+
+### Tech Stack Overview
+(all technologies mentioned in the job details)
+
+## Tailored Resume Bullets
+(the 5-8 STAR bullets you generated)
+
+## Interview Prep
+
+### Top 10 Likely Questions
+For each question, provide:
+**Q1: [Question]**
+> [3-5 sentence suggested answer with specific talking points]
+
+## Rules
+- Use concrete facts from the provided material. Do not invent.
+- Resume bullets must follow STAR format, quantified when possible.
+- Save filename format: {Company}-{Role}-{YYYY-MM-DD}.md (e.g., Stripe-Engineer-2026-03-31.md). Sanitize spaces to hyphens.
+- Do not call save_output until the full report — every section — is written.
+"""
+
+
+def build_synthesize_prompt(
+    job_details: dict,
+    company_briefing: str,
+    analysis: str,
+    candidate_name: str | None = None,
+    today: str | None = None,
+) -> str:
+    """The user prompt for the ``synthesize`` Step.
+
+    It threads the upstream Steps' outputs — extracted job details, the company
+    briefing, and the resume analysis — into the final Step, which generates the
+    resume bullets and interview prep, compiles the report, and saves it.
+    """
+    import json
+
+    today = today or date.today().isoformat()
+    name = candidate_name or "the candidate"
+    return (
+        "Compile the complete application-package report from the material below, "
+        "then save it with save_output.\n\n"
+        f"Candidate name: {name}\n"
+        f"Today's date: {today}\n\n"
+        f"Job details (JSON):\n{json.dumps(job_details, indent=2)}\n\n"
+        f"Company briefing:\n{company_briefing}\n\n"
+        f"Resume analysis (strong matches and gaps):\n{analysis}"
+    )
+
+
 def build_analyze_prompt(resume_path: str, job_details: dict) -> str:
     """The user prompt for the ``analyze`` Step run on its own."""
     import json
@@ -188,3 +271,32 @@ def build_user_prompt(job_url: str, resume_path: str, candidate_name: str | None
         f"research the company thoroughly, read the resume, analyze gaps, "
         f"generate tailored resume bullets and interview prep, then save the report."
     )
+
+
+# The labelled lines build_user_prompt emits, mapped to the structured keys the
+# orchestrator threads into each Step.
+_PIPELINE_INPUT_LABELS = {
+    "Job URL": "job_url",
+    "Resume file": "resume_path",
+    "Candidate name": "candidate_name",
+    "Today's date": "today",
+}
+
+
+def parse_pipeline_inputs(description: str) -> dict[str, str]:
+    """Recover the structured inputs from a Pipeline Task description.
+
+    The inverse of :func:`build_user_prompt`: the orchestrator parses the URL,
+    resume path, candidate name, and date back out so it can build a focused
+    prompt for each Step. Paired with ``build_user_prompt`` — keep the two in
+    sync. Only the labelled lines are read; surrounding prose is ignored.
+    """
+    inputs: dict[str, str] = {}
+    for line in description.splitlines():
+        label, sep, value = line.partition(":")
+        if not sep:
+            continue
+        key = _PIPELINE_INPUT_LABELS.get(label.strip())
+        if key:
+            inputs[key] = value.strip()
+    return inputs

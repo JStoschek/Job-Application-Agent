@@ -2,8 +2,8 @@
 
 Each Step is a mini-agent with a restricted tool subset and a focused
 instruction, independently runnable and scorable through the Agent Contract.
-``extract`` is the first; ``research`` and ``analyze`` follow the same pattern,
-and the Pipeline composes them in order (ADR 0001).
+``extract`` is the first; ``research``, ``analyze``, and ``synthesize`` follow
+the same pattern, and the Pipeline composes them in order (ADR 0001).
 """
 
 from steps.analyze import (
@@ -18,6 +18,11 @@ from steps.research import (
     ResearchStep,
     research_step,
 )
+from steps.synthesize import (
+    ENTRY_POINT_NAME as SYNTHESIZE_ENTRY_POINT_NAME,
+    SynthesizeStep,
+    synthesize_step,
+)
 
 __all__ = [
     "Step",
@@ -30,4 +35,7 @@ __all__ = [
     "AnalyzeStep",
     "analyze_step",
     "ANALYZE_ENTRY_POINT_NAME",
+    "SynthesizeStep",
+    "synthesize_step",
+    "SYNTHESIZE_ENTRY_POINT_NAME",
 ]
